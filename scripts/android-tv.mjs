@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,7 +14,7 @@ const APK_PATH = path.join(androidDir, "app", "build", "outputs", "apk", "debug"
 function run(cmd, args, options = {}) {
   const result = spawnSync(cmd, args, {
     stdio: "inherit",
-    shell: true,
+    shell: false,
     ...options,
   });
 
@@ -27,7 +28,30 @@ function adb(args) {
 }
 
 function gradle(task) {
-  run("gradlew.bat", [task], { cwd: androidDir });
+  const gradlewPath = path.join(androidDir, "gradlew.bat");
+  if (fs.existsSync(gradlewPath)) {
+    run("cmd.exe", ["/c", gradlewPath, task], { cwd: androidDir });
+    return;
+  }
+
+  const gradleProbe = spawnSync("gradle", ["-v"], {
+    stdio: "ignore",
+    shell: false,
+    cwd: androidDir,
+  });
+
+  if (gradleProbe.status === 0) {
+    run("gradle", [":app:" + task], { cwd: androidDir });
+    return;
+  }
+
+  console.error("Gradle wrapper not found: " + gradlewPath);
+  console.error("Global gradle command is also unavailable.");
+  console.error("Run one-time setup:");
+  console.error("  1) Install Gradle or Android Studio");
+  console.error("  2) In android-tv folder run: gradle wrapper");
+  console.error("  3) Re-run: npm run android:tv:build");
+  process.exit(1);
 }
 
 function connectIfConfigured() {
