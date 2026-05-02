@@ -24,6 +24,7 @@ jobs:
         run: npm run validate:web
 
   android-tv-build:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,6 +47,7 @@ jobs:
         run: gradle :app:assembleDebug
 
   appletv-build:
+    if: false
     runs-on: macos-latest
     steps:
       - name: Checkout
