@@ -1,0 +1,9 @@
+{
+  "id": "com.kvflive.webos",
+  "version": "1.0.0",
+  "vendor": "KvfLive",
+  "type": "web",
+  "title": "KvfLive webOS",
+  "main": "index.html",
+  "icon": "icon.png"
+}

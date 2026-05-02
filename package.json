@@ -1,0 +1,19 @@
+{
+  "name": "kvflive-tv-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:shared": "node scripts/sync-shared-config.mjs",
+    "validate:web": "node scripts/validate-tv-web-projects.mjs",
+    "ci:checks": "npm run sync:shared && npm run validate:web",
+    "webos:package": "node scripts/webos.mjs package",
+    "webos:install": "node scripts/webos.mjs install",
+    "webos:launch": "node scripts/webos.mjs launch",
+    "webos:run": "node scripts/webos.mjs run",
+    "webos:logs": "node scripts/webos.mjs logs"
+  },
+  "devDependencies": {
+    "hls.js": "^1.6.16"
+  }
+}

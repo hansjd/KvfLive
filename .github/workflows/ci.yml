@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  shared-web-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync shared config
+        run: npm run sync:shared
+
+      - name: Validate webOS/Tizen/shared files
+        run: npm run validate:web
+
+  android-tv-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Android TV debug APK
+        working-directory: android-tv
+        run: gradle :app:assembleDebug
+
+  appletv-build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apple-tv
+        run: xcodegen generate
+
+      - name: Build tvOS simulator target
+        working-directory: apple-tv
+        run: xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'generic/platform=tvOS Simulator' build
