@@ -1,6 +1,6 @@
 /**
- * Generates a 130×130 PNG icon: red background + white play triangle.
- * No external dependencies — uses Node built-ins only.
+ * Generates a 130x130 PNG icon with an original abstract "K" mark.
+ * Design is intentionally custom and does not reuse third-party logo artwork.
  */
 import zlib from "node:zlib";
 import fs from "node:fs";
@@ -11,32 +11,34 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 
 const SIZE = 130;
-const BG   = { r: 0xCC, g: 0x00, b: 0x00 }; // KVF red
-const FG   = { r: 0xFF, g: 0xFF, b: 0xFF }; // white
 
-const cx = SIZE / 2;
-const cy = SIZE / 2;
+const BG_TOP = { r: 0x06, g: 0x1B, b: 0x2E };
+const BG_BOTTOM = { r: 0x09, g: 0x3A, b: 0x57 };
+const STRIPE = { r: 0x0F, g: 0x56, b: 0x78 };
+const K_STEM = { r: 0xF5, g: 0xF8, b: 0xFC };
+const K_ARMS = { r: 0x2F, g: 0xD0, b: 0xFF };
 
-// Play-triangle vertices (pointing right, centred)
-const triW = SIZE * 0.38;
-const triH = SIZE * 0.44;
-const t = [
-  { x: cx - triW * 0.45, y: cy - triH / 2 },
-  { x: cx - triW * 0.45, y: cy + triH / 2 },
-  { x: cx + triW * 0.55, y: cy },
-];
-
-function sign(p1, p2, p3) {
-  return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+function lerp(a, b, t) {
+  return Math.round(a + (b - a) * t);
 }
-function inTriangle(px, py) {
-  const pt = { x: px, y: py };
-  const d1 = sign(pt, t[0], t[1]);
-  const d2 = sign(pt, t[1], t[2]);
-  const d3 = sign(pt, t[2], t[0]);
-  const hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-  const hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-  return !(hasNeg && hasPos);
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+  var l2 = dx * dx + dy * dy;
+  if (l2 === 0) {
+    var ox = px - x1;
+    var oy = py - y1;
+    return Math.sqrt(ox * ox + oy * oy);
+  }
+  var t = ((px - x1) * dx + (py - y1) * dy) / l2;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  var projX = x1 + t * dx;
+  var projY = y1 + t * dy;
+  var sx = px - projX;
+  var sy = py - projY;
+  return Math.sqrt(sx * sx + sy * sy);
 }
 
 // Build raw scanlines: 1 filter byte + SIZE*3 RGB bytes per row
@@ -45,8 +47,47 @@ for (let y = 0; y < SIZE; y++) {
   const off = y * (1 + SIZE * 3);
   raw[off] = 0; // filter: None
   for (let x = 0; x < SIZE; x++) {
-    const inside = inTriangle(x + 0.5, y + 0.5);
-    const c = inside ? FG : BG;
+    const nx = x / (SIZE - 1);
+    const ny = y / (SIZE - 1);
+
+    // Base vertical gradient.
+    const c = {
+      r: lerp(BG_TOP.r, BG_BOTTOM.r, ny),
+      g: lerp(BG_TOP.g, BG_BOTTOM.g, ny),
+      b: lerp(BG_TOP.b, BG_BOTTOM.b, ny),
+    };
+
+    // Diagonal accent stripe.
+    if (x > (y * 0.9 + 34) && x < (y * 0.9 + 52)) {
+      c.r = STRIPE.r;
+      c.g = STRIPE.g;
+      c.b = STRIPE.b;
+    }
+
+    // Original abstract K mark: one stem + two diagonal arms.
+    const inStem = x >= 34 && x <= 46 && y >= 24 && y <= 106;
+    const inUpperArm = distToSegment(x + 0.5, y + 0.5, 45, 65, 94, 30) <= 5.5;
+    const inLowerArm = distToSegment(x + 0.5, y + 0.5, 45, 65, 94, 100) <= 5.5;
+
+    if (inStem) {
+      c.r = K_STEM.r;
+      c.g = K_STEM.g;
+      c.b = K_STEM.b;
+    } else if (inUpperArm || inLowerArm) {
+      c.r = K_ARMS.r;
+      c.g = K_ARMS.g;
+      c.b = K_ARMS.b;
+    }
+
+    // Small "live" pulse dot to reinforce app purpose.
+    const dotDx = nx - 0.78;
+    const dotDy = ny - 0.25;
+    if ((dotDx * dotDx + dotDy * dotDy) < 0.0032) {
+      c.r = 0xFF;
+      c.g = 0x59;
+      c.b = 0x59;
+    }
+
     raw[off + 1 + x * 3]     = c.r;
     raw[off + 1 + x * 3 + 1] = c.g;
     raw[off + 1 + x * 3 + 2] = c.b;
