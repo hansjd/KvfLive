@@ -5,8 +5,57 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      shared_web: ${{ steps.filter.outputs.shared_web }}
+      android_tv: ${{ steps.filter.outputs.android_tv }}
+      apple_tv: ${{ steps.filter.outputs.apple_tv }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed project files
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ github.ref_name }}
+          filters: |
+            shared_web:
+              - 'scripts/shared-config.test.mjs'
+              - 'scripts/tv-project-validation.test.mjs'
+              - 'scripts/web-player.test.mjs'
+              - 'scripts/sync-shared-config.mjs'
+              - 'scripts/validate-tv-web-projects.mjs'
+              - 'scripts/webos.mjs'
+              - 'scripts/gen-icon*.mjs'
+              - 'scripts/download-icon.mjs'
+              - 'packages/shared/**'
+              - 'webos/**'
+              - 'tizen/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/**'
+            android_tv:
+              - 'android-tv/**'
+              - 'packages/shared/**'
+              - 'scripts/sync-shared-config.mjs'
+              - 'scripts/android-tv.mjs'
+              - '.github/workflows/**'
+            apple_tv:
+              - 'apple-tv/**'
+              - 'packages/shared/**'
+              - 'scripts/sync-shared-config.mjs'
+              - '.github/workflows/**'
+
   shared-web-checks:
+    needs: changes
+    if: needs.changes.outputs.shared_web == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,6 +76,8 @@ jobs:
         run: npm run validate:web
 
   android-tv-build:
+    needs: changes
+    if: needs.changes.outputs.android_tv == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,6 +108,8 @@ jobs:
         run: gradle :app:testDebugUnitTest
 
   appletv-build:
+    needs: changes
+    if: needs.changes.outputs.apple_tv == 'true'
     runs-on: macos-latest
     steps:
       - name: Checkout
