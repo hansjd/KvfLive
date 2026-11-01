@@ -17,7 +17,19 @@ Starter project scaffold for:
 
 ## 1) Android TV
 
-Open [android-tv](android-tv) in Android Studio and run the `app` target on an Android TV emulator/device.
+Prerequisites: JDK 17 and Android SDK Platform 34 / Build Tools 34.0.0.
+
+Build the debug APK from the repository root:
+
+- `npm run android:tv:build`
+
+With `adb` on `PATH` and an Android TV device or emulator connected, install and launch it:
+
+- `npm run android:tv:run`
+
+Find **KvfLive TV** in the TV's Apps list after installation. Its launcher banner uses the project's existing KvfLive icon.
+
+You can also open [android-tv](android-tv) in Android Studio and run the `app` target.
 
 ## 2) Apple TV (tvOS)
 
@@ -92,4 +104,3 @@ GitHub Actions workflow added at [/.github/workflows/ci.yml](.github/workflows/c
 ---
 
 This scaffold is now ready for iterative feature development.
-
