@@ -35,6 +35,38 @@ final class PlaybackSupportTests: XCTestCase {
         XCTAssertEqual(try PlaybackSupport.streamURL(from: data, defaultURL: defaultURL), defaultURL)
     }
 
+    func testStreamURLAcceptsHTTPAndHTTPSSchemesCaseInsensitively() throws {
+        let http = Data(#"{"streamUrl":"http://cdn.example.com/live.m3u8"}"#.utf8)
+        let uppercaseScheme = Data(#"{"streamUrl":"HTTPS://cdn.example.com/live.m3u8"}"#.utf8)
+
+        XCTAssertEqual(
+            try PlaybackSupport.streamURL(from: http, defaultURL: defaultURL).absoluteString,
+            "http://cdn.example.com/live.m3u8"
+        )
+        XCTAssertEqual(
+            try PlaybackSupport.streamURL(from: uppercaseScheme, defaultURL: defaultURL).absoluteString,
+            "HTTPS://cdn.example.com/live.m3u8"
+        )
+    }
+
+    func testStreamURLUsesDefaultWhenConfiguredURLIsEmptyOrHostless() throws {
+        let empty = Data(#"{"streamUrl":""}"#.utf8)
+        let hostless = Data(#"{"streamUrl":"https:"}"#.utf8)
+
+        XCTAssertEqual(try PlaybackSupport.streamURL(from: empty, defaultURL: defaultURL), defaultURL)
+        XCTAssertEqual(try PlaybackSupport.streamURL(from: hostless, defaultURL: defaultURL), defaultURL)
+    }
+
+    func testStreamURLUsesDefaultWhenConfigRootIsNotAnObject() throws {
+        XCTAssertEqual(
+            try PlaybackSupport.streamURL(
+                from: Data(#"["https://example.com/live.m3u8"]"#.utf8),
+                defaultURL: defaultURL
+            ),
+            defaultURL
+        )
+    }
+
     func testStreamURLThrowsForMalformedJSON() {
         XCTAssertThrowsError(
             try PlaybackSupport.streamURL(from: Data("{".utf8), defaultURL: defaultURL)
@@ -84,6 +116,12 @@ final class PlaybackSupportTests: XCTestCase {
         XCTAssertFalse(PlaybackSupport.shouldShowGoLiveButton(idleFor: 4.01, idleThreshold: 4))
     }
 
+    func testPlaybackResumesAfterSuspensionOnlyWhenItWasNotPaused() {
+        XCTAssertTrue(PlaybackSupport.shouldResumePlayback(isPaused: false))
+        XCTAssertFalse(PlaybackSupport.shouldResumePlayback(isPaused: true))
+        XCTAssertTrue(PlaybackSupport.shouldResumePlayback(isPaused: nil))
+    }
+
     func testLiveEdgeTargetSeeksOneSecondBeforeLiveEdge() {
         XCTAssertEqual(PlaybackSupport.liveEdgeTarget(start: 100, duration: 50), 149)
     }
@@ -95,6 +133,12 @@ final class PlaybackSupportTests: XCTestCase {
     func testLiveEdgeTargetRejectsNonFiniteRange() {
         XCTAssertNil(PlaybackSupport.liveEdgeTarget(start: .infinity, duration: 10))
         XCTAssertNil(PlaybackSupport.liveEdgeTarget(start: 10, duration: .nan))
+        XCTAssertNil(
+            PlaybackSupport.liveEdgeTarget(
+                start: .greatestFiniteMagnitude,
+                duration: .greatestFiniteMagnitude
+            )
+        )
     }
 
     func testAutomaticLiveEdgeTargetRequiresDriftBeyondTolerance() {
@@ -123,6 +167,52 @@ final class PlaybackSupportTests: XCTestCase {
                 start: 100,
                 duration: 50,
                 current: .nan,
+                tolerance: 30
+            )
+        )
+    }
+
+    func testAutomaticLiveEdgeTargetDoesNotSeekAtOrBelowTolerance() {
+        XCTAssertNil(
+            PlaybackSupport.automaticLiveEdgeTarget(
+                start: 100,
+                duration: 50,
+                current: 120,
+                tolerance: 30
+            )
+        )
+        XCTAssertNil(
+            PlaybackSupport.automaticLiveEdgeTarget(
+                start: 100,
+                duration: 50,
+                current: 121,
+                tolerance: 30
+            )
+        )
+    }
+
+    func testAutomaticLiveEdgeTargetRejectsInvalidToleranceAndRange() {
+        XCTAssertNil(
+            PlaybackSupport.automaticLiveEdgeTarget(
+                start: 100,
+                duration: 50,
+                current: 100,
+                tolerance: .infinity
+            )
+        )
+        XCTAssertNil(
+            PlaybackSupport.automaticLiveEdgeTarget(
+                start: 100,
+                duration: 50,
+                current: 100,
+                tolerance: .nan
+            )
+        )
+        XCTAssertNil(
+            PlaybackSupport.automaticLiveEdgeTarget(
+                start: .greatestFiniteMagnitude,
+                duration: .greatestFiniteMagnitude,
+                current: 0,
                 tolerance: 30
             )
         )

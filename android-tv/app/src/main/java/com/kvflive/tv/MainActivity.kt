@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         return try {
             assets.open("shared/app-config.json").bufferedReader().use { reader ->
                 val json = JSONObject(reader.readText())
-                json.optString("streamUrl", defaultStreamUrl).ifBlank { defaultStreamUrl }
+                configuredStreamUrl(json.optString("streamUrl", ""), defaultStreamUrl)
             }
         } catch (_: Exception) {
             defaultStreamUrl

@@ -135,7 +135,9 @@ struct ContentView: View {
 
     private func suspendPlayback() {
         guard !isSuspended else { return }
-        resumePlayback = player?.timeControlStatus != .paused
+        resumePlayback = PlaybackSupport.shouldResumePlayback(
+            isPaused: player.map { $0.timeControlStatus == .paused }
+        )
         isSuspended = true
         player?.pause()
     }

@@ -49,6 +49,8 @@ window.onload = function () {
 
   var LIVE_EDGE_TOLERANCE = 30;
   var syncInterval = null;
+  var canPlayHandler = null;
+  var errorHandler = null;
 
   function snapToLiveEdge() {
     try {
@@ -97,25 +99,37 @@ window.onload = function () {
     }
 
     stopLiveEdgeSync();
+    if (canPlayHandler) {
+      player.removeEventListener("canplay", canPlayHandler);
+      canPlayHandler = null;
+    }
+    if (errorHandler) {
+      player.removeEventListener("error", errorHandler);
+      errorHandler = null;
+    }
     setStatus("Connecting...");
 
     player.src = streamUrl;
     player.load();
 
-    player.addEventListener("canplay", function onCanPlay() {
+    canPlayHandler = function onCanPlay() {
       player.removeEventListener("canplay", onCanPlay);
+      canPlayHandler = null;
       setStatus("Live");
       play();
       startLiveEdgeSync();
-    });
+    };
+    player.addEventListener("canplay", canPlayHandler);
 
-    player.addEventListener("error", function onError() {
+    errorHandler = function onError() {
       player.removeEventListener("error", onError);
+      errorHandler = null;
       stopLiveEdgeSync();
       var code = player.error ? player.error.code : "unknown";
       console.error("Video error code", code);
       setStatus("Stream error (" + code + ")");
-    });
+    };
+    player.addEventListener("error", errorHandler);
   }
 
   // Start stream immediately.
@@ -142,4 +156,3 @@ window.onload = function () {
   };
   xhr.send();
 };
-

@@ -50,6 +50,10 @@ enum PlaybackSupport {
         idleFor <= idleThreshold
     }
 
+    static func shouldResumePlayback(isPaused: Bool?) -> Bool {
+        isPaused != true
+    }
+
     static func liveEdgeTarget(start: Double, duration: Double) -> Double? {
         let liveEdge = start + duration
         guard start.isFinite, duration.isFinite, liveEdge.isFinite else { return nil }
