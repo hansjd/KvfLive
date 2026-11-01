@@ -2,10 +2,10 @@
 
 Starter project scaffold for:
 
-- Android TV (native Kotlin)
-- Apple TV / tvOS (native SwiftUI via XcodeGen)
-- LG webOS (web app package)
-- Samsung Tizen (web app package)
+- ✅ Android TV (native Kotlin) — working
+- ❌ Apple TV / tvOS (native SwiftUI via XcodeGen) — not yet working
+- ✅ LG webOS (web app package) — working
+- ❌ Samsung Tizen (web app package) — not yet working
 
 ## Structure
 
