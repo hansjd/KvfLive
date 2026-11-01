@@ -87,9 +87,6 @@ struct ContentView: View {
             }
             markInteraction()
         }
-        .onTapGesture {
-            markInteraction()
-        }
         .onAppear {
             isVisible = true
             if player == nil {
