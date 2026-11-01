@@ -33,6 +33,10 @@ Video fills the available screen without outer padding and preserves the stream'
 
 You can also open [android-tv](android-tv) in Android Studio and run the `app` target.
 
+Run the Android TV JVM unit tests from [android-tv](android-tv) with:
+
+- `gradle :app:testDebugUnitTest`
+
 ## 2) Apple TV (tvOS)
 
 This repo includes an XcodeGen spec to generate the Xcode project.
@@ -100,7 +104,7 @@ This copies the file to:
 GitHub Actions workflow added at [/.github/workflows/ci.yml](.github/workflows/ci.yml) with jobs for:
 
 - Shared/web validation
-- Android TV build
+- Android TV build and unit tests
 - Apple TV build
 
 ---

@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity() {
 
     private val defaultStreamUrl =
         "https://w-live-edge2.kringvarp.fo/kvf/_definst_/smil:kvf.smil/playlist.m3u8"
-    private val liveEdgeToleranceSec = 30.0
     private val uiIdleMs = 4000L
     private val liveEdgeSyncMs = 5000L
 
@@ -99,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                 val exoPlayer = player
                 if (exoPlayer != null && exoPlayer.isPlaying) {
                     val liveOffsetMs = exoPlayer.currentLiveOffset
-                    if (liveOffsetMs > 0 && liveOffsetMs / 1000.0 > liveEdgeToleranceSec) {
+                    if (shouldSeekToLiveEdge(liveOffsetMs)) {
                         exoPlayer.seekToDefaultPosition()
                     }
                 }

@@ -49,6 +49,10 @@ jobs:
         working-directory: android-tv
         run: gradle :app:assembleDebug
 
+      - name: Run Android TV unit tests
+        working-directory: android-tv
+        run: gradle :app:testDebugUnitTest
+
   appletv-build:
     runs-on: macos-latest
     steps:
