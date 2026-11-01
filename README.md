@@ -3,9 +3,9 @@
 Starter project scaffold for:
 
 - ✅ Android TV (native Kotlin) — **Working**
-- ❓ Apple TV / tvOS (native SwiftUI via XcodeGen) — **Not yet tested**
 - ✅ LG webOS (web app package) — **Working**
-- ❌ Samsung Tizen (web app package) — **Wot yet working**
+- ❓ Apple TV / tvOS (native SwiftUI via XcodeGen) — **Not yet tested**
+- ❓ Samsung Tizen (web app package) — **Not yet tested**
 
 Unless otherwise noted, this project is licensed under the GNU General Public
 License, version 3 or (at your option) any later version. See [LICENSE](LICENSE).
