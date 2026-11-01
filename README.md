@@ -9,10 +9,10 @@ Starter project scaffold for:
 
 ## Structure
 
-- [android-tv](android-tv)
-- [apple-tv](apple-tv)
-- [webos](webos)
-- [tizen](tizen)
+- [Android TV guide](android-tv/README.md)
+- [Apple TV guide](apple-tv/README.md)
+- [LG webOS guide](webos/README.md)
+- [Samsung Tizen guide](tizen/README.md)
 - [packages/shared](packages/shared)
 
 ## 1) Android TV

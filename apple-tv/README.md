@@ -1,5 +1,7 @@
 # Apple TV (tvOS)
 
+Native tvOS app built with SwiftUI and AVKit.
+
 This folder uses XcodeGen for reproducible project generation.
 
 The app's unit tests cover stream configuration, playback status, idle visibility, and live-edge seek policy. A macOS CI job builds and runs this suite on the tvOS simulator; playback and remote interaction still need device/simulator checks.
@@ -20,6 +22,10 @@ xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV \
 ```
 
 The app icon and top-shelf artwork match the blue K and red live dot used by Android TV/webOS.
+
+The shared stream URL is loaded from `TVApp/Resources/shared/app-config.json`.
+Edit [`packages/shared/app-config.json`](../packages/shared/app-config.json),
+then run `npm run sync:shared` from the repository root to update the tvOS copy.
 
 ## Playback checks
 
