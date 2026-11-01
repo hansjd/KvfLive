@@ -150,24 +150,26 @@ struct ContentView: View {
 
     private func updatePlaybackStatus() {
         guard let avPlayer = player, let item = avPlayer.currentItem else { return }
-        guard !playbackFailed else { return }
-        if item.status == .failed {
-            if statusText != "Stream error" {
-                print("Stream playback failed: \(String(describing: item.error))")
-            }
-            statusText = "Stream error"
-        } else {
-            switch avPlayer.timeControlStatus {
-            case .playing:
-                statusText = "Live"
-            case .waitingToPlayAtSpecifiedRate:
-                statusText = "Buffering..."
-            case .paused:
-                statusText = "Paused"
-            @unknown default:
-                statusText = "Connecting..."
-            }
+        let itemFailed = item.status == .failed
+        if itemFailed && statusText != "Stream error" {
+            print("Stream playback failed: \(String(describing: item.error))")
         }
+        let playbackState: PlaybackState
+        switch avPlayer.timeControlStatus {
+        case .playing:
+            playbackState = .playing
+        case .waitingToPlayAtSpecifiedRate:
+            playbackState = .waiting
+        case .paused:
+            playbackState = .paused
+        @unknown default:
+            playbackState = .unknown
+        }
+        statusText = PlaybackSupport.statusText(
+            itemFailed: itemFailed,
+            playbackFailed: playbackFailed,
+            playbackState: playbackState
+        )
     }
 
     private func markInteraction() {
@@ -177,9 +179,10 @@ struct ContentView: View {
 
     private func updateIdleVisibility() {
         let idleFor = Date().timeIntervalSince(lastInteractionAt)
-        if idleFor > uiIdleSec {
-            showGoLiveButton = false
-        }
+        showGoLiveButton = PlaybackSupport.shouldShowGoLiveButton(
+            idleFor: idleFor,
+            idleThreshold: uiIdleSec
+        )
     }
 
     private func maybeAutoSnapToLiveEdge() {
@@ -191,45 +194,51 @@ struct ContentView: View {
         lastLiveSyncAt = now
 
         guard let seekableRange = avPlayer.currentItem?.seekableTimeRanges.last?.timeRangeValue else { return }
-        let liveEdge = CMTimeGetSeconds(seekableRange.start) + CMTimeGetSeconds(seekableRange.duration)
+        let start = CMTimeGetSeconds(seekableRange.start)
+        let duration = CMTimeGetSeconds(seekableRange.duration)
         let current = CMTimeGetSeconds(avPlayer.currentTime())
-        guard liveEdge.isFinite && current.isFinite else { return }
-        let drift = liveEdge - current
-        if drift > liveEdgeToleranceSec {
-            let target = max(0, liveEdge - 1)
-            avPlayer.seek(to: CMTime(seconds: target, preferredTimescale: 600))
-        }
+        guard let target = PlaybackSupport.automaticLiveEdgeTarget(
+            start: start,
+            duration: duration,
+            current: current,
+            tolerance: liveEdgeToleranceSec
+        ) else { return }
+
+        avPlayer.seek(to: CMTime(seconds: target, preferredTimescale: 600))
     }
 
     private func snapToLiveEdge() {
         guard let avPlayer = player else { return }
         guard let seekableRange = avPlayer.currentItem?.seekableTimeRanges.last?.timeRangeValue else { return }
 
-        let liveEdge = CMTimeGetSeconds(seekableRange.start) + CMTimeGetSeconds(seekableRange.duration)
-        guard liveEdge.isFinite else { return }
-        let target = max(0, liveEdge - 1)
+        guard let target = PlaybackSupport.liveEdgeTarget(
+            start: CMTimeGetSeconds(seekableRange.start),
+            duration: CMTimeGetSeconds(seekableRange.duration)
+        ) else { return }
+
         avPlayer.seek(to: CMTime(seconds: target, preferredTimescale: 600))
         avPlayer.play()
     }
 
     private func loadStreamUrlFromSharedConfig() -> URL {
+        var configData: Data?
         if let configUrl = Bundle.main.url(
             forResource: "app-config",
             withExtension: "json",
             subdirectory: "shared"
         ) {
             do {
-                let data = try Data(contentsOf: configUrl)
-                if let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let streamUrl = root["streamUrl"] as? String,
-                   let url = URL(string: streamUrl) {
-                    return url
-                }
+                configData = try Data(contentsOf: configUrl)
             } catch {
-                print("Failed to parse shared app config: \(error)")
+                print("Failed to read shared app config: \(error)")
             }
         }
 
-        return URL(string: defaultStreamUrl)!
+        do {
+            return try PlaybackSupport.streamURL(from: configData, defaultURL: URL(string: defaultStreamUrl)!)
+        } catch {
+            print("Failed to parse shared app config: \(error)")
+            return URL(string: defaultStreamUrl)!
+        }
     }
 }

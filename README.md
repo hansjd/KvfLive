@@ -39,7 +39,7 @@ Run the Android TV JVM unit tests from [android-tv](android-tv) with:
 
 ## 2) Apple TV (tvOS)
 
-This repo includes an XcodeGen spec to generate the Xcode project.
+This repo includes an XcodeGen spec to generate the Xcode project and its unit-test target.
 
 On macOS:
 
@@ -47,7 +47,11 @@ On macOS:
 2. Install XcodeGen.
 3. From [apple-tv](apple-tv), run:
    - `xcodegen generate`
-4. Open the generated project in Xcode and run on an Apple TV simulator/device.
+4. Open the generated project in Xcode and run the **KvfLiveAppleTV** scheme's tests or run on an Apple TV simulator/device.
+
+The test suite can also be run from macOS in [apple-tv](apple-tv) with:
+
+- `xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'platform=tvOS Simulator,name=Apple TV 4K (3rd generation)' CODE_SIGNING_ALLOWED=NO test`
 
 ## 3) LG webOS
 

@@ -22,5 +22,32 @@ targets:
         INFOPLIST_FILE: TVApp/Resources/Info.plist
         SWIFT_VERSION: 5.0
         ASSETCATALOG_COMPILER_APPICON_NAME: App Icon & Top Shelf Image
-    scheme:
-      gatherCoverageData: false
+
+  KvfLiveAppleTVTests:
+    type: bundle.unit-test
+    platform: tvOS
+    deploymentTarget: "15.0"
+    sources:
+      - TVAppTests
+    dependencies:
+      - target: KvfLiveAppleTV
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kvflive.appletv.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KvfLiveAppleTV.app/KvfLiveAppleTV"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_VERSION: 5.0
+
+schemes:
+  KvfLiveAppleTV:
+    build:
+      targets:
+        KvfLiveAppleTV: all
+        KvfLiveAppleTVTests: [test]
+    test:
+      config: Debug
+      targets:
+        - KvfLiveAppleTVTests
+    run:
+      config: Debug

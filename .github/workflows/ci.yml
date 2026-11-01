@@ -69,6 +69,6 @@ jobs:
         working-directory: apple-tv
         run: xcodegen generate
 
-      - name: Build tvOS simulator target
+      - name: Build and test tvOS simulator target
         working-directory: apple-tv
-        run: xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'generic/platform=tvOS Simulator' CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'platform=tvOS Simulator,name=Apple TV 4K (3rd generation)' CODE_SIGNING_ALLOWED=NO test

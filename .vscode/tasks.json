@@ -25,6 +25,26 @@
       },
       "group": "test",
       "problemMatcher": []
+    },
+    {
+      "label": "Apple TV: Unit Tests",
+      "type": "shell",
+      "command": "xcodebuild",
+      "args": [
+        "-project",
+        "KvfLiveAppleTV.xcodeproj",
+        "-scheme",
+        "KvfLiveAppleTV",
+        "-destination",
+        "platform=tvOS Simulator,name=Apple TV 4K (3rd generation)",
+        "CODE_SIGNING_ALLOWED=NO",
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\apple-tv"
+      },
+      "group": "test",
+      "problemMatcher": []
     }
   ]
 }

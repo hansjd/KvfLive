@@ -2,7 +2,7 @@
 
 This folder uses XcodeGen for reproducible project generation.
 
-Status: **Not yet tested**. A macOS CI job builds the tvOS simulator target; successful compilation does not verify playback or remote interaction.
+The app's unit tests cover stream configuration, playback status, idle visibility, and live-edge seek policy. A macOS CI job builds and runs this suite on the tvOS simulator; playback and remote interaction still need device/simulator checks.
 
 ## Generate project (macOS)
 
@@ -10,6 +10,14 @@ Status: **Not yet tested**. A macOS CI job builds the tvOS simulator target; suc
 2. Install XcodeGen.
 3. Run `xcodegen generate` in this folder.
 4. Open generated `.xcodeproj` and run on tvOS simulator/device.
+
+Run the unit-test suite on macOS with:
+
+```sh
+xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV \
+  -destination 'platform=tvOS Simulator,name=Apple TV 4K (3rd generation)' \
+  CODE_SIGNING_ALLOWED=NO test
+```
 
 The app icon and top-shelf artwork match the blue K and red live dot used by Android TV/webOS.
 
