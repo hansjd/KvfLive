@@ -24,7 +24,6 @@ jobs:
         run: npm run validate:web
 
   android-tv-build:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
