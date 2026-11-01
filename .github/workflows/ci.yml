@@ -20,6 +20,9 @@ jobs:
       - name: Sync shared config
         run: npm run sync:shared
 
+      - name: Run shared code tests
+        run: npm test
+
       - name: Validate webOS/Tizen/shared files
         run: npm run validate:web
 

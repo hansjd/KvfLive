@@ -99,11 +99,13 @@ This copies the file to:
 - [android-tv/app/src/main/assets/shared/app-config.json](android-tv/app/src/main/assets/shared/app-config.json)
 - [apple-tv/TVApp/Resources/shared/app-config.json](apple-tv/TVApp/Resources/shared/app-config.json)
 
+Run tests for shared-config syncing and validation with `npm test` or the VS Code task **Shared Code: Tests**.
+
 ## CI
 
 GitHub Actions workflow added at [/.github/workflows/ci.yml](.github/workflows/ci.yml) with jobs for:
 
-- Shared/web validation
+- Shared-code tests and shared/web validation
 - Android TV build and unit tests
 - Apple TV build
 
