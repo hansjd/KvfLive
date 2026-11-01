@@ -7,6 +7,9 @@ Starter project scaffold for:
 - ✅ LG webOS (web app package) — **Working**
 - ❌ Samsung Tizen (web app package) — **Wot yet working**
 
+Unless otherwise noted, this project is licensed under the GNU General Public
+License, version 3 or (at your option) any later version. See [LICENSE](LICENSE).
+
 ## Structure
 
 - [Android TV guide](android-tv/README.md)
@@ -112,6 +115,9 @@ GitHub Actions workflow added at [/.github/workflows/ci.yml](.github/workflows/c
 - Shared-code tests and shared/web validation
 - Android TV build and unit tests
 - Apple TV build
+
+The workflow detects changed paths and runs only the affected platform checks.
+Shared config and CI workflow changes run all relevant jobs.
 
 ---
 
