@@ -9,10 +9,18 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - TVApp/Sources
-    resources:
-      - TVApp/Resources
+      - path: TVApp/Resources
+        excludes:
+          - Info.plist
+          - shared
+      - path: TVApp/Resources/shared
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kvflive.appletv
         INFOPLIST_FILE: TVApp/Resources/Info.plist
         SWIFT_VERSION: 5.0
+        ASSETCATALOG_COMPILER_APPICON_NAME: App Icon & Top Shelf Image
+    scheme:
+      gatherCoverageData: false

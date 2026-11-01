@@ -12,10 +12,16 @@ struct KvfLiveAppleTVApp: App {
 }
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var player: AVPlayer?
     @State private var statusText: String = "Starting stream..."
     @State private var showGoLiveButton: Bool = false
     @State private var lastInteractionAt: Date = Date()
+    @State private var lastLiveSyncAt: Date = .distantPast
+    @State private var isVisible = false
+    @State private var resumePlayback = true
+    @State private var isSuspended = false
+    @State private var playbackFailed = false
 
     private let defaultStreamUrl = "https://w-live-edge2.kringvarp.fo/kvf/_definst_/smil:kvf.smil/playlist.m3u8"
     private let liveEdgeToleranceSec: Double = 30
@@ -62,31 +68,61 @@ struct ContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .opacity(showGoLiveButton ? 1 : 0)
+            .disabled(!showGoLiveButton)
             .animation(.easeOut(duration: 0.6), value: showGoLiveButton)
             .padding(.trailing, 32)
             .padding(.bottom, 36)
         }
-        .focusable()
+        .focusSection()
         .onMoveCommand { _ in
             markInteraction()
         }
         .onPlayPauseCommand {
+            if let activePlayer = player {
+                if activePlayer.timeControlStatus == .paused {
+                    activePlayer.play()
+                } else {
+                    activePlayer.pause()
+                }
+            }
             markInteraction()
         }
         .onTapGesture {
             markInteraction()
         }
         .onAppear {
+            isVisible = true
             if player == nil {
                 startStream()
+            } else {
+                resumePlaybackIfNeeded()
+            }
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active {
+                if isVisible {
+                    resumePlaybackIfNeeded()
+                }
+            } else if phase == .background {
+                suspendPlayback()
             }
         }
         .onReceive(ticker) { _ in
+            guard isVisible && scenePhase == .active else { return }
+            updatePlaybackStatus()
             updateIdleVisibility()
             maybeAutoSnapToLiveEdge()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime)) { notification in
+            guard let item = notification.object as? AVPlayerItem,
+                  item === player?.currentItem else { return }
+            playbackFailed = true
+            statusText = "Stream error"
+            print("Stream playback failed: \(String(describing: notification.userInfo))")
+        }
         .onDisappear {
-            player?.pause()
+            isVisible = false
+            suspendPlayback()
         }
     }
 
@@ -96,24 +132,45 @@ struct ContentView: View {
         player = avPlayer
         statusText = "Connecting..."
 
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemNewAccessLogEntry,
-            object: avPlayer.currentItem,
-            queue: .main
-        ) { _ in
-            statusText = "Live"
-        }
-
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemFailedToPlayToEndTime,
-            object: avPlayer.currentItem,
-            queue: .main
-        ) { _ in
-            statusText = "Stream error"
-        }
-
         avPlayer.play()
         markInteraction()
+    }
+
+    private func suspendPlayback() {
+        guard !isSuspended else { return }
+        resumePlayback = player?.timeControlStatus != .paused
+        isSuspended = true
+        player?.pause()
+    }
+
+    private func resumePlaybackIfNeeded() {
+        guard isSuspended else { return }
+        isSuspended = false
+        if resumePlayback {
+            player?.play()
+        }
+    }
+
+    private func updatePlaybackStatus() {
+        guard let avPlayer = player, let item = avPlayer.currentItem else { return }
+        guard !playbackFailed else { return }
+        if item.status == .failed {
+            if statusText != "Stream error" {
+                print("Stream playback failed: \(String(describing: item.error))")
+            }
+            statusText = "Stream error"
+        } else {
+            switch avPlayer.timeControlStatus {
+            case .playing:
+                statusText = "Live"
+            case .waitingToPlayAtSpecifiedRate:
+                statusText = "Buffering..."
+            case .paused:
+                statusText = "Paused"
+            @unknown default:
+                statusText = "Connecting..."
+            }
+        }
     }
 
     private func markInteraction() {
@@ -132,16 +189,14 @@ struct ContentView: View {
         guard let avPlayer = player else { return }
         guard avPlayer.timeControlStatus == .playing else { return }
 
-        let nowSec = Date().timeIntervalSinceReferenceDate
-        let bucket = Int(nowSec / syncIntervalSec)
-        let shouldCheckThisSecond = abs(nowSec - (Double(bucket) * syncIntervalSec)) < 1.0
-        if !shouldCheckThisSecond {
-            return
-        }
+        let now = Date()
+        guard now.timeIntervalSince(lastLiveSyncAt) >= syncIntervalSec else { return }
+        lastLiveSyncAt = now
 
         guard let seekableRange = avPlayer.currentItem?.seekableTimeRanges.last?.timeRangeValue else { return }
         let liveEdge = CMTimeGetSeconds(seekableRange.start) + CMTimeGetSeconds(seekableRange.duration)
         let current = CMTimeGetSeconds(avPlayer.currentTime())
+        guard liveEdge.isFinite && current.isFinite else { return }
         let drift = liveEdge - current
         if drift > liveEdgeToleranceSec {
             let target = max(0, liveEdge - 1)
@@ -154,8 +209,10 @@ struct ContentView: View {
         guard let seekableRange = avPlayer.currentItem?.seekableTimeRanges.last?.timeRangeValue else { return }
 
         let liveEdge = CMTimeGetSeconds(seekableRange.start) + CMTimeGetSeconds(seekableRange.duration)
+        guard liveEdge.isFinite else { return }
         let target = max(0, liveEdge - 1)
         avPlayer.seek(to: CMTime(seconds: target, preferredTimescale: 600))
+        avPlayer.play()
     }
 
     private func loadStreamUrlFromSharedConfig() -> URL {

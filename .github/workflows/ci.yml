@@ -47,7 +47,6 @@ jobs:
         run: gradle :app:assembleDebug
 
   appletv-build:
-    if: false
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -62,4 +61,4 @@ jobs:
 
       - name: Build tvOS simulator target
         working-directory: apple-tv
-        run: xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'generic/platform=tvOS Simulator' build
+        run: xcodebuild -project KvfLiveAppleTV.xcodeproj -scheme KvfLiveAppleTV -destination 'generic/platform=tvOS Simulator' CODE_SIGNING_ALLOWED=NO build
