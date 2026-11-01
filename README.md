@@ -29,6 +29,8 @@ With `adb` on `PATH` and an Android TV device or emulator connected, install and
 
 Find **KvfLive TV** in the TV's Apps list after installation. Its launcher banner uses the project's existing KvfLive icon.
 
+Video fills the available screen without outer padding and preserves the stream's aspect ratio.
+
 You can also open [android-tv](android-tv) in Android Studio and run the `app` target.
 
 ## 2) Apple TV (tvOS)
