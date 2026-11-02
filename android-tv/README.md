@@ -44,7 +44,8 @@ cd android-tv
 
 On Windows, use `gradlew.bat` instead of `./gradlew`. The VS Code task
 **Android TV: Unit Tests** runs the same test suite. CI builds the debug APK
-and runs these tests.
+and runs these tests. The APK is available as the
+`kvflive-android-tv-debug` artifact on the GitHub Actions workflow run.
 
 ## Shared stream configuration
 

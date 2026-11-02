@@ -107,6 +107,13 @@ jobs:
         working-directory: android-tv
         run: gradle :app:testDebugUnitTest
 
+      - name: Upload Android TV debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kvflive-android-tv-debug
+          path: android-tv/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
   appletv-build:
     needs: changes
     if: needs.changes.outputs.apple_tv == 'true'
