@@ -24,9 +24,9 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v4
         with:
-          base: ${{ github.ref_name }}
           filters: |
             shared_web:
+              - 'scripts/ci-workflow.test.mjs'
               - 'scripts/shared-config.test.mjs'
               - 'scripts/tv-project-validation.test.mjs'
               - 'scripts/web-player.test.mjs'
@@ -83,6 +83,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync shared config
+        run: npm run sync:shared
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -96,16 +104,14 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.7"
 
       - name: Build Android TV debug APK
         working-directory: android-tv
-        run: gradle :app:assembleDebug
+        run: ./gradlew :app:assembleDebug
 
       - name: Run Android TV unit tests
         working-directory: android-tv
-        run: gradle :app:testDebugUnitTest
+        run: ./gradlew :app:testDebugUnitTest
 
       - name: Upload Android TV debug APK
         uses: actions/upload-artifact@v4
